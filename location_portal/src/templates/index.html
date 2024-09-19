@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container fade-in">
+    <h1 class="title" style="font-size: 2.5rem;">
+        Welcome, Agent
+    </h1>
+    <p class="subtitle" style="font-size: 1.25rem;">
+        QuickR-Maps is your secure portal for managing and sharing critical intelligence locations.
+        Stay ahead of the game by keeping track of hideouts, persons of interest, and mission-critical gear.
+    </p>
+
+    <hr>
+
+    <div class="columns is-centered mt-5">
+        <div class="column is-half">
+            <button class="button is-fullwidth is-large" onclick="viewLocations()">
+                <span class="icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </span>
+                <span>View Locations</span>
+            </button>
+        </div>
+        <div class="column is-half">
+            <a class="button is-fullwidth is-large" href="{{ url_for('main.add_location') }}">
+                <span class="icon">
+                    <i class="fas fa-plus-circle"></i>
+                </span>
+                <span>Add New Location</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="section mt-6">
+        <div class="box">
+            <h2 class="title" style="font-size: 1.75rem;">About Quickr-Maps</h2>
+            <p>
+                Quickr-Maps is a highly secure, web-based location management tool built exclusively for field agents.
+                Keep track of hideouts, equipment caches, persons of interest, and vital mission-related locations with ease.
+                With advanced encryption and multi-layered access control, your data stays in safe hands.
+            </p>
+            <p class="mt-3">
+                Stay anonymous. Stay informed. Stay one step ahead of your targets.
+            </p>
+        </div>
+    </div>
+
+    <div class="section mt-6">
+        <div class="box">
+            <h2 class="title" style="font-size: 1.75rem;">Available Servers</h2>
+
+            <div class="content">
+                <h3 class="subtitle">Server: private_loc</h3>
+                <p>
+                    The <strong style="color: #00adb5;">private_loc</strong> server stores locations that are only visible to you and the agents you specifically choose to share them with.
+                    This server ensures that sensitive locations, such as personal hideouts or mission-critical assets, are kept completely private and accessible only by authorized personnel.
+                </p>
+
+                <h3 class="subtitle">Server: public_loc</h3>
+                <p>
+                    The <strong style="color: #00adb5;">public_loc</strong> server allows you to store and share locations with all agents.
+                    This is ideal for collaborative missions where sharing information can benefit the entire network. By using public_loc, agents can identify common hideouts,
+                    shared gear caches, or important meeting points that could enhance operational synergy and success.
+                </p>
+
+                <h3 class="subtitle">Additional Server Requests</h3>
+                <p>
+                    Need a server for mission-specific purposes? QuickR-Maps admins can set up additional, custom servers tailored to your mission's needs.
+                    Whether it’s for a temporary operation, specialized data segregation, or regional focus, just contact the admins to request a new server.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+playground/
+services/instance
+services/run.py
+ctf-gameserver/
+
+Pipfile
+Pipfile.lock
+
+# otherwise golsp will complain when opened
+# from root dir (pizza-time)
+go.work
+
+checker/service-checker/checker-flag-store1.py
+checker/service-checker/cities.json
+
+**/__pycache__/
+_*_state.json
+tmp.img
+**/*.local

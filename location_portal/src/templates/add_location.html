@@ -1,0 +1,98 @@
+{% extends "base.html" %} {% block content %}
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin />
+
+<script src="{{ url_for('static', filename='js/location_util.js') }}"></script>
+
+<div id="map" style="height:500px;"></div>
+
+<div>
+    <form id="location-form" action="/api/location/add" method="POST" onsubmit="return addLocation(event);">
+        <div class="field">
+            <label class="label"></label>
+            <div class="control">
+                <input class="input is-large" type="text" id="name" placeholder="Name" />
+            </div>
+        </div>
+        <div class="columns">
+        <div class="field column is-half">
+            <div class="control">
+                <input
+                    class="input is-large"
+                    type="number"
+                    id="latitude"
+                    placeholder="Latitude"
+                    step="any" />
+            </div>
+        </div>
+        <div class="field column is-half">
+            <div class="control">
+                <input
+                    class="input is-large"
+                    type="number"
+                    id="longitude"
+                    placeholder="Longitude"
+                    step="any" />
+                </div>
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                <input
+                    class="input"
+                    type="hidden"
+                    id="jsonData"
+                    name="jsonData"
+                    />
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                <input
+                    class="input"
+                    type="hidden"
+                    id="server"
+                    name="server"
+                    />
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="control">
+                <button class="button is-block is-info is-large is-fullwidth">Submit</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+
+<script>
+    var map = L.map("map").setView([0, 0], 4);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution:
+            '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    var marker = L.marker([0, 0]).addTo(map);
+
+    function onMapClick(e) {
+        marker.setLatLng(e.latlng);
+        document.getElementById("latitude").value = e.latlng.lat;
+        document.getElementById("longitude").value = e.latlng.lng;
+    }
+
+    map.on("click", onMapClick);
+</script>
+
+
+{% endblock %}

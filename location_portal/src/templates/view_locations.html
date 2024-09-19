@@ -1,0 +1,296 @@
+{% extends "base.html" %} {% block content %}
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin />
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/nouislider.css') }}" />
+
+<script src="{{ url_for('static', filename='js/nouislider.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/location_util.js') }}"></script>
+<div class="columns is-fullheight">
+    <div class="column is-half full-height">
+        <div id="map" style="height: 850px"></div>
+    </div>
+    <div class="column is-half full-height">
+        <div class="field">
+            <div class="control">
+                <input
+                    id="search_input"
+                    class="input is-large"
+                    type="text"
+                    placeholder="Search..."
+                    onkeyup="filterTable()" />
+            </div>
+        </div>
+
+        <div class="form-section">
+            <form
+                action="/api/share"
+                method="POST"
+                onsubmit="return shareLocation(event)">
+                <div class="field is-grouped">
+                    <div class="control is-expanded">
+                        <input
+                            class="input is-large"
+                            type="text"
+                            name="receiver"
+                            placeholder="Enter ID for sharing" />
+                    </div>
+                    <div class="control">
+                        <input
+                            class="input"
+                            type="hidden"
+                            id="server"
+                            name="server" />
+                    </div>
+                    <div class="control">
+                        <button
+                            class="button is-block is-info is-large is-fullwidth"
+                            type="submit">
+                            Share
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="location-table-section">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Tag</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Timestamp</th>
+                        <th>Owner</th>
+                    </tr>
+                </thead>
+                <tbody id="loc_list"></tbody>
+            </table>
+
+            <h2>Slice Timestamps</h2>
+            <div style="padding-left: 4rem; padding-right: 4rem">
+                <div id="slider"></div>
+            </div>
+            <div style="padding-left: 4rem; padding-right: 4rem">
+                <h5 id="slider-start-time"></h5>
+                <h5 id="slider-end-time"></h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+
+<script>
+    var map = L.map("map").setView([0, 0], 4);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution:
+            '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    url =
+        "/api/locations?server=" +
+        new URLSearchParams(window.location.search).get("server");
+
+    function filterTable() {
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("search_input");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("loc_list");
+        tr = table.getElementsByTagName("tr");
+
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[0];
+            if (td) {
+                txtValue = td.textContent || td.innerText;
+                index = tr[i].rowIndex;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                    circles[index - 1].setStyle({ opacity: 1, fillOpacity: 1 });
+                } else {
+                    tr[i].style.display = "none";
+                    circles[index - 1].setStyle({ opacity: 0, fillOpacity: 0 });
+                }
+            }
+        }
+    }
+
+    function hoverIn(event) {
+        index = event.srcElement.rowIndex;
+        circles[index - 1].setStyle({ weight: 8 });
+        document.body.style.cursor = "pointer";
+    }
+    function hoverOut(event) {
+        index = event.srcElement.rowIndex;
+        circles[index - 1].setStyle({ weight: 4 });
+        document.body.style.cursor = "auto";
+    }
+    function clickTo(event) {
+        index = event.target.parentNode.rowIndex;
+        map.panTo(circles[index - 1]._latlng);
+    }
+
+    function buildTable(json_obj) {
+        document.getElementById("loc_list").innerHTML = "";
+
+        json_obj.forEach((location) => {
+            let headers = ["tag", "lat", "lon", "timestamp", "owner"];
+
+            let fragment = document.createElement("tr");
+            fragment.onmouseenter = hoverIn;
+            fragment.onmouseleave = hoverOut;
+            fragment.onclick = clickTo;
+
+            for (let i = 0; i < headers.length; i++) {
+                let td = document.createElement("td");
+                fragment.appendChild(td);
+
+                if (location[headers[i]] == undefined) continue;
+                switch (headers[i]) {
+                    case "lat":
+                    case "lon":
+                        td.innerText =
+                            Math.round(location[headers[i]] * 10000) / 10000;
+                        break;
+                    case "timestamp":
+                        td.innerText = new Date(
+                            location[headers[i]]
+                        ).toLocaleString();
+                        break;
+                    case "owner":
+                        if (location[headers[i]].length < 10) {
+                            td.innerText = location[headers[i]];
+                        } else {
+                            td.innerText =
+                                location[headers[i]].slice(0, 7) + "...";
+                            td.title = location[headers[i]];
+                        }
+                        break;
+                    case "tag":
+                        if (location[headers[i]].length > 15) {
+                            td.innerText = location[headers[i]].slice(0, 15);
+                            td.innerText += " ";
+                            td.innerText = location[headers[i]].slice(15);
+                            break;
+                        }
+                    default:
+                        td.innerText = location[headers[i]];
+                }
+            }
+            document.getElementById("loc_list").appendChild(fragment);
+        });
+    }
+
+    var circles = [];
+    var fetched_locations;
+    var minTime = 0;
+    var maxTime = 0;
+
+    function loadData() {
+        fetch(url).then((r) => {
+            r.json().then((json_obj) => {
+                fetched_locations = json_obj;
+
+                minTime = Infinity;
+                maxTime = 0;
+                fetched_locations.forEach((location) => {
+                    if (maxTime < location.timestamp) {
+                        maxTime = location.timestamp;
+                    }
+                    if (minTime > location.timestamp) {
+                        minTime = location.timestamp;
+                    }
+                });
+
+                createCircles(fetched_locations);
+                createSlider();
+            });
+        });
+    }
+
+    function createCircles(locations) {
+        removeCircles();
+        locations.forEach((location) => {
+            var circle = L.circle([location.lat, location.lon], {
+                color: getColorForTime(location.timestamp, minTime, maxTime),
+                fillColor: getColorForTime(
+                    location.timestamp,
+                    minTime,
+                    maxTime
+                ),
+                fillOpacity: 0.5,
+                radius: 5,
+                weight: 4, // Outline width in pixels
+            }).addTo(map);
+            circles.push(circle);
+        });
+        buildTable(locations);
+    }
+
+    function getColorForTime(time, minTime, maxTime) {
+        const normalizedTime = (time - minTime) / (maxTime - minTime);
+        const r = Math.floor(255 * normalizedTime);
+        const g = 0;
+        const b = 0;
+        return `rgb(${r},${g},${b})`;
+    }
+
+    function createSlider() {
+        var slider = document.getElementById("slider");
+        console.log(slider);
+        noUiSlider.create(slider, {
+            start: [minTime, maxTime],
+            connect: true,
+            range: {
+                min: minTime,
+                max: maxTime,
+            },
+        });
+        var starttime = document.getElementById("slider-start-time");
+        var endtime = document.getElementById("slider-end-time");
+
+        starttime.innerHTML = "From:  " + new Date(minTime).toLocaleString();
+        endtime.innerHTML = "Until: " + new Date(maxTime).toLocaleString();
+
+        slider.noUiSlider.on("change", function (values, handle) {
+            starttime.innerHTML =
+                "From:  " + new Date(parseFloat(values[0])).toLocaleString();
+            endtime.innerHTML =
+                "Until: " + new Date(parseFloat(values[1])).toLocaleString();
+
+            filterLocationsByTime(values[0], values[1]);
+        });
+    }
+
+    async function filterLocationsByTime(minTimestamp, maxTimestamp) {
+        let filteredLocations = fetched_locations.filter((location) => {
+            return (
+                location.timestamp >= minTimestamp &&
+                location.timestamp <= maxTimestamp
+            );
+        });
+        removeCircles();
+        createCircles(filteredLocations);
+    }
+
+    function removeCircles() {
+        circles.forEach((circle) => {
+            map.removeLayer(circle);
+        });
+
+        circles = [];
+    }
+
+    loadData();
+</script>
+
+{% endblock %}

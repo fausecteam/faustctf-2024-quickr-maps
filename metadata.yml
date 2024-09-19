@@ -1,0 +1,26 @@
+# Human-readable name of the service
+name: QuickR Maps
+# Name of the service for usage in paths, usernames etc.: Should only consist of lowercase alphanumeric
+# characters, must be identical to the (URL) project name of the GitLab repo
+slug: quickr-maps
+authors:
+  - Karol Bakas <karol.bakas@fau.de>
+  - David Schönberger <david.schoenberger@fau.de>
+
+install:
+  container_images:
+    - faust.cs.fau.de:5000/location_portal_deps
+    - faust.cs.fau.de:5000/backend_loc_deps
+    - faust.cs.fau.de:5000/location_portal
+    - faust.cs.fau.de:5000/private_loc
+    - faust.cs.fau.de:5000/public_loc
+
+checker:
+  script_path: checker/mychecker.py
+  # Upper bound of how long the Checker Script takes to run (for a single team)
+  # Used for scheduling checks within a tick, executions taking longer *may* get terminated
+  max_duration: 60
+  debian_packages:
+    - python3-requests
+    - libzbar0
+  pip_packages: [opencv_python, pyzbar, qrcode]

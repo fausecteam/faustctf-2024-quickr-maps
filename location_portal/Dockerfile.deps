@@ -1,0 +1,6 @@
+FROM alpine:latest
+
+# INSTALL PYTHON DEPS
+RUN apk add --update --no-cache python3 py3-pip
+COPY requirements.txt .
+RUN pip install -r requirements.txt --break-system-packages

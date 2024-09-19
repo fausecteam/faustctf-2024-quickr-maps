@@ -1,0 +1,60 @@
+version: "2.2"
+# ipv6 is not supported in version 3
+
+services:
+  location_portal_deps:
+    scale: 0
+    image: faust.cs.fau.de:5000/location_portal_deps
+    #image: localhost/test/location_portal_deps
+    build:
+      context: ./location_portal
+      dockerfile: Dockerfile.deps
+
+  backend_loc_deps:
+    scale: 0
+    image: faust.cs.fau.de:5000/backend_loc_deps
+    #image: localhost/test/backend_loc_deps
+    build:
+      context: ./private_loc
+      dockerfile: Dockerfile.deps
+
+
+  location_portal:
+    image: faust.cs.fau.de:5000/location_portal
+    build:
+      context: ./location_portal
+      dockerfile: Dockerfile
+    ports:
+      - "4241:4241"
+    volumes:
+      - portal-db:/location_portal/db
+    depends_on:
+      - private_loc
+      - public_loc
+
+  private_loc:
+    image: faust.cs.fau.de:5000/private_loc
+    build:
+      context: ./private_loc
+      dockerfile: Dockerfile
+    expose:
+      - "4242"  # Expose port to other containers in the same network
+
+  public_loc:
+    image: faust.cs.fau.de:5000/public_loc
+    build:
+      context: ./public_loc
+      dockerfile: Dockerfile
+    expose:
+      - "4242"  # Expose port to other containers in the same network
+
+volumes:
+  portal-db:
+
+networks:
+  default:
+    enable_ipv6: true
+    ipam:
+        driver: default
+        config:
+            - subnet: "fd42:d0ca:87::/64"
